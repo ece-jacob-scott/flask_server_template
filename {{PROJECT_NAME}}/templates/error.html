@@ -1,0 +1,13 @@
+<div
+  id="error_container"
+  class="mx-auto w-1/3 bg-red-300 rounded-lg p-4 htmx-added:opacity-0 opacity-100 transition-opacity duration-1000 htmx-swapping:opacity-0"
+>
+  <p class="font-bold text-white">{{ error }}</p>
+
+  <button
+    class="bg-gray-400 text-white p-2 rounded-lg w-full"
+    _="on click remove #error_container"
+  >
+    clear
+  </button>
+</div>

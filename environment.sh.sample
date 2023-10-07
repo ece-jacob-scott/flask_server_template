@@ -1,0 +1,12 @@
+export FLASK_APP=
+export FLASK_ENV=
+export FLASK_RUN_PORT=
+export APP_VERSION=
+export HAS_AUTH=
+export CLERK_FRONTEND_KEY=
+export CLERK_BACKEND_KEY=
+export HAS_DATABASE=
+export DB_HOST=
+export DB_USER=
+export DB_PASSWORD=
+export DB_NAME=

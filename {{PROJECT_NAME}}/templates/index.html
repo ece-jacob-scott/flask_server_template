@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+
+<!--prettier-ignore-->
+{% block title %}{{PROJECT_NAME}}{% endblock %}
+
+<!--prettier-ignore-->
+{% block content %}
+
+{% if name %}
+<h1 class="text-blue-500">Hello {{ name }}!</h1>
+{% else %}
+<h1 class="text-green-500">Hello, World!</h1>
+{% endif %}
+
+<button hx-get="/health" hx-swap="innerHTML" class="bg-blue-300 p-2 rounded-sm">
+  Click Me
+</button>
+
+<button hx-get="/error" hx-swap="innerHTML" class="bg-red-300 p-2 rounded-sm">
+  Error
+</button>
+
+<button
+  hx-get="/protected"
+  hx-swap="innerHTML"
+  class="bg-green-300 p-2 rounded-sm"
+>
+  Protected
+</button>
+
+{% endblock %}

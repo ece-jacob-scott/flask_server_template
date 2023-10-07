@@ -1,0 +1,24 @@
+# fly.toml app configuration file generated for {{PROJECT_NAME}}-server on 2023-09-27T19:19:41-07:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "{{PROJECT_NAME}}"
+primary_region = "sjc"
+kill_signal = "SIGTERM"
+
+[build]
+  builder = "paketobuildpacks/builder:full"
+
+# TODO: for some reason the FLASK_RUN_PORT is not being set in the deployment
+[env]
+  FLASK_RUN_PORT = 5000
+  FLASK_ENV = "production"
+  APP_VERSION = "1"
+
+[http_service]
+  internal_port = 5000
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html class="m-0 p-0 h-full">
+  <title>{% block title %}{% endblock %}</title>
+  {% if config["FLASK_ENV"] == "production" %}
+  <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='output.css') }}"
+  />
+  {% else %}
+  <!--for development don't use our custom tailwindcss output.css to skip the build step-->
+  <!--TODO: this only works while we don't use any custom tailwind configs which might bite us later-->
+  <script src="https://cdn.tailwindcss.com"></script>
+  {% endif %}
+  <link
+    rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐢</text></svg>"
+  />
+
+  <body class="font-sans h-full m-0 p-0">
+    <div id="navbar" class="flex flex-row items-center w-full p-2 bg-blue-300">
+      <p class="font-bold text-black font-mono text-xl">
+        <a
+          href="/"
+          class="hover:text-brand-600 hover:underline hover:decoration-brand-900"
+        >
+          {{PROJECT_NAME}}
+        </a>
+      </p>
+
+      <div class="grow"></div>
+      <div class="mr-2">
+        <a
+          href="/"
+          class="hover:text-brand-600 hover:underline hover:decoration-brand-900 uppercase"
+        >
+          page
+        </a>
+      </div>
+
+      {% if config["HAS_AUTH"] %}
+      <div id="auth-links" class="flex flex-row items-center gap-2">
+        <button
+          class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          onclick="Clerk.openSignUp()"
+        >
+          Sign Up
+        </button>
+        <button
+          class="bg-brand-600 hover:bg-brand-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          onclick="Clerk.openSignIn()"
+        >
+          Sign In
+        </button>
+      </div>
+
+      <div
+        id="user-info"
+        class="hidden flex flex-row items-center gap-2 px-2 py-1 bg-brand-600 hover:bg-brand-700 rounded-lg text-white"
+      >
+        <p
+          class="font-bold text-white cursor-pointer"
+          _="on clerkReady from #body
+              js
+                const firstName = window.Clerk.user.firstName;
+                return firstName;
+              end
+              put it into me
+             on click 
+              js
+                document.querySelector('#user-button button').click();
+              end
+              then log 'clicked user button'"
+        ></p>
+        <div id="user-button"></div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div id="error_container"></div>
+
+    {% block content %}{% endblock %}
+
+    <script src="https://unpkg.com/hyperscript.org@0.9.8"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+
+    {% if config["HAS_AUTH"] %}
+    <script>
+      const frontend_api = "{{ config['CLERK_FRONTEND_KEY'] }}";
+
+      // Create a script that will be loaded asynchronously in
+      // your page.
+      const script = document.createElement("script");
+      script.setAttribute("data-clerk-frontend-api", frontend_api);
+      script.async = true;
+      script.src = `https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js`;
+      script.crossOrigin = "anonymous";
+
+      const clerkReady = new Event("clerkReady", { bubbles: true });
+      // Add a listener so you can initialize ClerkJS
+      // once it's loaded.
+      script.addEventListener("load", async function () {
+        const Clerk = window.Clerk;
+
+        try {
+          await Clerk.load();
+
+          const userButton = document.getElementById("user-button");
+          const authLinks = document.getElementById("auth-links");
+
+          Clerk.addListener(({ user }) => {
+            authLinks.style.display = user ? "none" : "block";
+          });
+
+          if (Clerk.user) {
+            Clerk.mountUserButton(userButton);
+            userButton.style.margin = "auto";
+            // removes the hidden element from the DOM
+            document.getElementById("user-info").classList.remove("hidden");
+            // trigger event to let other scripts know clerk is ready
+            htmx.trigger(htmx.find("body"), "clerkReady");
+          }
+        } catch (e) {
+          console.log(e);
+        }
+      });
+      document.body.appendChild(script);
+    </script>
+    <script>
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(";").shift();
+      }
+
+      document.body.addEventListener("htmx:configRequest", function (evt) {
+        if (!window.Clerk) {
+          console.log("no clerk token");
+          return;
+        }
+        console.log("adding clerk token");
+        // the window.Clerk.session.GetToken() returns a promise but this function can't be async
+        const session_token = getCookie("__session");
+        evt.detail.headers["Authorization"] = session_token; // add a new header into the request
+      });
+    </script>
+    {% endif %}
+    <script>
+      document.body.addEventListener("htmx:beforeSwap", function (evt) {
+        const status = evt.detail.xhr.status;
+
+        if (status >= 200 && status < 300) {
+          return;
+        }
+
+        // check if the error container is already in the DOM
+        if (!document.getElementById("error_container")) {
+          // if not, add it
+          const errorContainer = document.createElement("div");
+          errorContainer.id = "error_container";
+          document.getElementById("navbar").after(errorContainer);
+        }
+        evt.detail.shouldSwap = true;
+        evt.detail.target = htmx.find("#error_container");
+
+        switch (status) {
+          case 400:
+            console.log("bad request");
+            break;
+          case 401:
+            console.log("unauthorized");
+
+            // TODO: move this to the server
+            window.Clerk.signOut().then(() => {
+              window.location.href = "/";
+            });
+            break;
+          case 403:
+            console.log("forbidden");
+            break;
+          case 404:
+            console.log("not found");
+            break;
+          case 500:
+            console.log("server error");
+            break;
+          default:
+            console.log("unknown error");
+        }
+      });
+    </script>
+  </body>
+</html>

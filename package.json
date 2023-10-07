@@ -1,0 +1,15 @@
+{
+  "name": "{{PROJECT_NAME}}",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Server application for {{PROJECT_NAME}}",
+  "type": "module",
+  "scripts": {
+    "build-tailwind": "tailwind -c ./configs/tailwind/tailwind.config.js -i ./configs/tailwind/input.css -o ./{{PROJECT_NAME}}/static/output.css"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "tailwindcss": "^3.3.2"
+  }
+}
