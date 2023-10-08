@@ -163,3 +163,4 @@ node_modules/
 environment.sh
 **/output.css
 tmp/
+*.db

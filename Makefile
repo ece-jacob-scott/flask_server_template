@@ -6,12 +6,17 @@ build: $(SOURCE_FILES)
 	@npm run build-tailwind
 	@echo "built!"
 
+.PHONY: create_database
+create_database:
+	@echo "Creating database..."
+	flask --app {{PROJECT_NAME}} create_database
+
 .PHONY: run
-run: build
+run: build create_database
 	flask --app {{PROJECT_NAME}} run
 
 .PHONY: dev
-dev: build
+dev: build create_database
 	flask --app {{PROJECT_NAME}} run --debug
 
 .PHONY: deploy

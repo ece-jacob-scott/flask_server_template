@@ -11,6 +11,23 @@ fi
 
 PROJECT_NAME=$1
 
+# Setup a virtual environment if one does not exist
+if [ ! -d "venv" ]; then
+    python3 -m venv venv
+fi
+
+# Activate the virtual environment
+
+source venv/bin/activate
+
+# Install the requirements
+
+pip install -r requirements.txt
+
+# Install the requirements for the frontend
+
+npm install
+
 # Rename the project folder to $PROJECT_NAME
 
 mv {{PROJECT_NAME}} $PROJECT_NAME
