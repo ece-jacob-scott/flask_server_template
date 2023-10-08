@@ -23,7 +23,7 @@ v18.9.1
 2.0.2
 > npm i
 > curl -L https://fly.io/install.sh | sh
-> cp environment.sh.sample FLASK_ENV.sh
+> cp environment.sh.sample environment.sh
 > vim environment.sh
 > source environment.sh
 ```
